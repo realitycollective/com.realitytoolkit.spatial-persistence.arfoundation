@@ -1,13 +1,10 @@
 {
-    "name": "RealityToolkit.UPMTEMPLATE.Editor.Tests",
+    "name": "RealityToolkit.SpatialPersistence_ARFoundation.Tests",
     "references": [
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
-        "RealityToolkit.UPMTEMPLATE"
+        "UnityEditor.TestRunner"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,

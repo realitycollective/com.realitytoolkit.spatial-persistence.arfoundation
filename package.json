@@ -1,7 +1,7 @@
 {
-  "name": "com.realitytoolkit.UPMTEMPLATE",
-  "displayName": "RealityToolkit.UPMTEMPLATE",
-  "description": "The UPMTEMPLATE framework of the Reality Toolkit by the Reality Collective",
+  "name": "com.realitytoolkit.spatialpersistence.arfoundation",
+  "displayName": "RealityToolkit.SpatialPersistence.ARFoundation",
+  "description": "The Spatial Persistence ARFoundation module for the Reality Toolkit by the Reality Collective",
   "keywords": [
     "VR",
     "AR",
@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/realitycollective/com.realitytoolkit.UPMTEMPLATE"
+    "url": "git+https://github.com/realitycollective/com.realitytoolkit.spatialpersistence.arfoundation"
   },
   "author": {
     "name": "Reality Collective",
@@ -25,7 +25,8 @@
     "url": "https://github.com/realitycollective"
   },
   "dependencies": {
-    "com.realitytoolkit.core": "1.0.0-pre.1"
+    "com.realitytoolkit.core": "1.0.0-pre.1",
+    "com.unity.xr.arfoundation": "4.1.13"
   },
   "assets": [
     {
