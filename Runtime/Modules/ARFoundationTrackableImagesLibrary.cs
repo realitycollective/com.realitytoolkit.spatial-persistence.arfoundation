@@ -4,6 +4,7 @@
 using RealityCollective.Extensions;
 using RealityToolkit.SpatialPersistence.Definitions;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace RealityToolkit.SpatialPersistence.ARFoundation
@@ -59,7 +60,10 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
         public void AddTrackedImageData(ARFoundationTrackedImageData trackedImageData)
         {
-            trackedImages.EnsureListItem(trackedImageData);
+            if (!trackedImages.Contains(trackedImageData))
+            {
+                trackedImages = trackedImages.AddItem(trackedImageData);
+            }
         }
     }
 }
