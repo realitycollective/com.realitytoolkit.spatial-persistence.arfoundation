@@ -59,7 +59,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
         public void AddTrackedImageData(ARFoundationTrackedImageData trackedImageData)
         {
-            trackedImages = trackedImages.AddItem(trackedImageData);
+            trackedImages.EnsureListItem(trackedImageData);
         }
     }
 }

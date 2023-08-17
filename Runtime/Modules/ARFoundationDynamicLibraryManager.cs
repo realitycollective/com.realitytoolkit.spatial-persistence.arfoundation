@@ -1,6 +1,7 @@
 // Copyright (c) Reality Collective. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using RealityCollective.Extensions;
 using RealityCollective.Utilities;
 using RealityToolkit.SpatialPersistence.Definitions;
 using System;
@@ -29,7 +30,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         #endregion Public Properties
 
         #region MonoBehaviours
-        void Update()
+        private void Update()
         {
             if (processingImagesQueue.Count > 0 && processingImages.Count.Equals(0))
             {
@@ -160,6 +161,13 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             if (mutableLibrary is null)
             {
                 StaticLogger.LogError("Cannot process, no library");
+                return;
+            }
+
+            if (image.Texture.IsNull() && string.IsNullOrEmpty(image.Url))
+            {
+                var name = string.IsNullOrEmpty(image.Name) ? "Unknown" : image.Name;
+                StaticLogger.LogWarning($"Cannot process {name}, no image or url, assuming it is a referenced image in the ARCoreTrackedImage configuration.");
                 return;
             }
 

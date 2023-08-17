@@ -199,8 +199,15 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 {
                     trackedImageIds.Add(newImage.referenceImage.guid);
                     var trackedReference = profile.TrackedImagesLibrary.GetTrackedImageByName(newImage.referenceImage.name);
-                    trackedImageReferences.Add(newImage.referenceImage.guid, trackedReference.SourceGuid);
-                    OnAnchorLocated(trackedImageReferences[newImage.referenceImage.guid], newImage.transform.gameObject);
+                    if (trackedReference != null)
+                    {
+                        trackedImageReferences.Add(newImage.referenceImage.guid, trackedReference.SourceGuid);
+                        OnAnchorLocated(trackedImageReferences[newImage.referenceImage.guid], newImage.transform.gameObject);
+                    }
+                    else
+                    {
+                        OnAnchorLocated(newImage.referenceImage.guid, newImage.transform.gameObject);
+                    }
                 }
             }
 
@@ -208,7 +215,12 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             {
                 if (trackedImageIds.Contains(updatedImage.referenceImage.guid))
                 {
-                    OnAnchorUpdated(trackedImageReferences[updatedImage.referenceImage.guid], updatedImage.transform.gameObject);
+                    Guid refGuid = updatedImage.referenceImage.guid;
+                    if(trackedImageReferences.TryGetValue(updatedImage.referenceImage.guid, out var trackedGuid))
+                    {
+                        refGuid = trackedGuid;
+                    }
+                    OnAnchorUpdated(refGuid, updatedImage.transform.gameObject);
                 }
                 else
                 {
@@ -220,7 +232,12 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             {
                 if (trackedImageIds.Contains(removedImage.referenceImage.guid))
                 {
-                    OnAnchorDeleted(trackedImageReferences[removedImage.referenceImage.guid]);
+                    Guid refGuid = removedImage.referenceImage.guid;
+                    if (trackedImageReferences.TryGetValue(removedImage.referenceImage.guid, out var trackedGuid))
+                    {
+                        refGuid = trackedGuid;
+                    }
+                    OnAnchorDeleted(refGuid);
                     trackedImageIds.Remove(removedImage.referenceImage.guid);
                 }
                 else
@@ -232,7 +249,10 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
         private void OnImageLoaded(ARFoundationTrackedImageData data)
         {
-            profile.TrackedImagesLibrary.AddTrackedImageData(data);
+            if(profile.TrackedImagesLibrary.GetTrackedImageByName(data.Name) == null)
+            {
+                profile.TrackedImagesLibrary.AddTrackedImageData(data);
+            }
             OnCreateAnchorSucceeded(data.SourceGuid, null);
             OnSpatialPersistenceStatusMessage($"Image Loaded: {data.Name}, Image Count: {trackedImageManager.referenceLibrary.count}");
         }
