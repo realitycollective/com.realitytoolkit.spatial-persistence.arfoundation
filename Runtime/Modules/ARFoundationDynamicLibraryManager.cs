@@ -1,11 +1,13 @@
 // Copyright (c) Reality Collective. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using RealityCollective.Extensions;
 using RealityCollective.Utilities;
 using RealityToolkit.SpatialPersistence.Definitions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.XR.ARFoundation;
@@ -24,10 +26,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
         #region Public Properties
         public Action<ARFoundationTrackedImageData> OnImageLoaded;
+        public Action<string> OnImageLoadFailed;
         #endregion Public Properties
 
         #region MonoBehaviours
-        void Update()
+        private void Update()
         {
             if (processingImagesQueue.Count > 0 && processingImages.Count.Equals(0))
             {
@@ -88,18 +91,13 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                         var done = true;
                         foreach (var image in processingImages)
                         {
-                            if (image.jobState.status == AddReferenceImageJobStatus.None)
-                            {
-                                break;
-                            }
-
                             if (!image.jobState.jobHandle.IsCompleted)
                             {
                                 done = false;
                                 break;
                             }
 
-                            if (image.jobState.status != AddReferenceImageJobStatus.Success)
+                            if (image.jobState.status == AddReferenceImageJobStatus.ErrorUnknown || image.jobState.status == AddReferenceImageJobStatus.ErrorInvalidImage)
                             {
                                 SetError($"The image {image.Name} was not loaded due to {image.jobState.status}");
                             }
@@ -126,30 +124,59 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         #endregion MonoBehaviours
 
         #region Public Methods
-        public void ProcessImage(MutableRuntimeReferenceImageLibrary mutableLibrary, Texture2D image, Guid referenceGuid, string name)
+        public void ProcessImage(MutableRuntimeReferenceImageLibrary mutableLibrary, Guid sourceGuid, Texture2D image = null, string url = "")
         {
-            this.mutableLibrary = mutableLibrary;
+            // Null library
+            if (mutableLibrary is null)
+            {
+                StaticLogger.LogError("Cannot process, no library");
+                return;
+            }
 
-            processingImagesQueue.Enqueue(new ARFoundationTrackedImageData() { Name = name, Texture = image, ReferenceGuid = referenceGuid });
+            ProcessImage(mutableLibrary, new ARFoundationTrackedImageData() { SourceGuid = sourceGuid, Name = image?.name, Texture = image, Url = url });
         }
 
-        public void ProcessImages(MutableRuntimeReferenceImageLibrary mutableLibrary, Texture2D[] images, Guid[] referenceGuids)
+        public void ProcessImages(MutableRuntimeReferenceImageLibrary mutableLibrary, Guid[] sourceGuids, Texture2D[] images, string[] urls)
         {
-            this.mutableLibrary = mutableLibrary;
+            // Null library
+            if (mutableLibrary is null)
+            {
+                StaticLogger.LogError("Cannot process, no library");
+                return;
+            }
 
-            if (!images.Length.Equals(referenceGuids.Length))
+            if (!images.Length.Equals(sourceGuids.Length))
             {
                 SetError("images and guid lists do not match");
             }
             for (int i = 0; i < images.Length; i++)
             {
-                processingImagesQueue.Enqueue(new ARFoundationTrackedImageData() { Texture = images[i], ReferenceGuid = referenceGuids[i] });
+                ProcessImage(mutableLibrary, new ARFoundationTrackedImageData() { SourceGuid = sourceGuids[i], Texture = images[i], Url = urls[i] });
             }
         }
 
         public void ProcessImage(MutableRuntimeReferenceImageLibrary mutableLibrary, ARFoundationTrackedImageData image)
         {
+            // Null library
+            if (mutableLibrary is null)
+            {
+                StaticLogger.LogError("Cannot process, no library");
+                return;
+            }
+
+            if (image.Texture.IsNull() && string.IsNullOrEmpty(image.Url))
+            {
+                var name = string.IsNullOrEmpty(image.Name) ? "Unknown" : image.Name;
+                StaticLogger.LogWarning($"Cannot process {name}, no image or url, assuming it is a referenced image in the ARCoreTrackedImage configuration.");
+                return;
+            }
+
             this.mutableLibrary = mutableLibrary;
+
+            if (string.IsNullOrEmpty(image.Name))
+            {
+                image.Name = image.Texture == null ? Path.GetFileNameWithoutExtension(image.Url) : image.Texture.name;
+            }
 
             processingImagesQueue.Enqueue(image);
         }
@@ -166,15 +193,12 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             //No Images to process
             if (images is null || images.Length < 1)
             {
-                StaticLogger.LogError("Cannot process, no images");
                 return;
             }
 
-            this.mutableLibrary = mutableLibrary;
-
             foreach (var image in images)
             {
-                processingImagesQueue.Enqueue(image);
+                ProcessImage(mutableLibrary, image);
             }
         }
         #endregion Public Methods
@@ -184,6 +208,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         {
             m_State = ImageTrackingProcessingState.Error;
             StaticLogger.LogError($"Error: {errorMessage}");
+            OnImageLoadFailed?.Invoke(errorMessage);
         }
 
         private IEnumerator AddRemoteImageToLibrary(ARFoundationTrackedImageData image, bool wait = true)
@@ -203,6 +228,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                     {
                         image.jobState = mutableLibrary.ScheduleAddImageWithValidationJob(image.Texture, image.Name, image.PhysicalSize > 0 ? image.PhysicalSize : 1);
                         yield return new WaitWhile(() => wait && !image.jobState.jobHandle.IsCompleted);  //Optional wait
+                        
                         Destroy(image.Texture);
                     }
                 }

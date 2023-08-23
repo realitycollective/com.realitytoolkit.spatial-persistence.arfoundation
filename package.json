@@ -25,7 +25,8 @@
     "url": "https://github.com/realitycollective"
   },
   "dependencies": {
-    "com.unity.xr.arfoundation": "4.1.13"
+    "com.unity.xr.arfoundation": "4.1.13",
+    "com.realitytoolkit.spatial-persistence":"1.0.0-pre.5"
   },
   "assets": [
     {

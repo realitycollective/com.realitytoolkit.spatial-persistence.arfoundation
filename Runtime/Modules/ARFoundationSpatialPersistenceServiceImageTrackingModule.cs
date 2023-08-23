@@ -2,9 +2,9 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using RealityCollective.Extensions;
-using RealityCollective.Utilities;
 using RealityCollective.Utilities.Async;
 using RealityToolkit.SpatialPersistence.ARFoundation.Definitions;
+using RealityToolkit.SpatialPersistence.ARFoundation.Extensions;
 using RealityToolkit.SpatialPersistence.Definitions;
 using RealityToolkit.SpatialPersistence.Interfaces;
 using System;
@@ -26,6 +26,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         private ARFoundationDynamicLibraryManager dynamicLibraryManager;
         private MutableRuntimeReferenceImageLibrary runtimeImageLibrary;
         private readonly List<Guid> trackedImageIds = new List<Guid>();
+        private readonly Dictionary<Guid, Guid> trackedImageReferences = new Dictionary<Guid, Guid>();
         private bool isStarted = false;
         private bool isStarting = false;
 
@@ -97,9 +98,13 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             {
                 isStarting = true;
                 runtimeImageLibrary = TrackedImageManager.referenceLibrary as MutableRuntimeReferenceImageLibrary;
-                DynamicLibraryManager.ProcessImages(runtimeImageLibrary, profile.TrackedImagesLibrary.TrackedImages);
                 DynamicLibraryManager.OnImageLoaded += OnImageLoaded;
+                DynamicLibraryManager.OnImageLoadFailed += OnImageLoadFailed;
                 TrackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
+                if (profile.TrackedImagesLibrary.IsNotNull() && profile.TrackedImagesLibrary.TrackedImages != null)
+                {
+                    DynamicLibraryManager.ProcessImages(runtimeImageLibrary, profile.TrackedImagesLibrary.TrackedImages);
+                }
                 isStarted = true;
                 isStarting = false;
                 OnSessionStarted();
@@ -111,7 +116,10 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         /// <inheritdoc />
         public override void StopSpatialPersistenceModule()
         {
-            TrackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
+            if (TrackedImageManager != null)
+            {
+                TrackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
+            }
             OnSessionEnded();
         }
 
@@ -129,14 +137,14 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             }
             if (!IsRunning)
             {
-                OnSpatialPersistenceError("Cannot find anchors as the Image Tracking Service cannot start, check configuration");
+                OnSpatialPersistenceError($"[{nameof(TryFindAnchors)}] - Cannot find anchors as the Image Tracking Service is not started, check configuration");
                 return;
             }
 
             foreach (var anchorArg in args)
             {
                 OnFindAnchorStarted();
-                AwaiterExtensions.RunCoroutine(AddToLibrary(runtimeImageLibrary, anchorArg.texture, anchorArg.guid));
+                AwaiterExtensions.RunCoroutine(AddToLibrary(runtimeImageLibrary, anchorArg.guid, anchorArg.texture, anchorArg.url));
             }
         }
 
@@ -153,21 +161,30 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         #endregion IARFoundationImageTrackingModule implementation
 
         #region Private Methods
-        private IEnumerator AddToLibrary(MutableRuntimeReferenceImageLibrary mutableLibrary, Texture2D texture, Guid anchorGuid)
+        private IEnumerator AddToLibrary(MutableRuntimeReferenceImageLibrary mutableLibrary, Guid anchorGuid, Texture2D texture = null, string url = "")
         {
-            if (texture.IsNull() || !texture.isReadable)
+            if (mutableLibrary is null)
             {
-                OnSpatialPersistenceError($"Unable to add image [{texture.name}] to library as it is not readable");
+                OnSpatialPersistenceError($"Library is inaccessble.");
                 yield return null;
             }
-            if (mutableLibrary != null)
+            if (trackedImageIds.Contains(anchorGuid))
             {
-                dynamicLibraryManager.ProcessImage(mutableLibrary, texture, anchorGuid, texture.name);
+                OnAnchorLocatedError(anchorGuid, $"Anchor with Guid [{anchorGuid}] already exists.");
+                yield return null;
             }
-            else
+            if (texture.IsNull() && string.IsNullOrEmpty(url))
             {
-                OnSpatialPersistenceError($"Library is inaccessble");
+                OnSpatialPersistenceError($"No Source Image texture or URL provided, nothing to add.");
+                yield return null;
             }
+            if (texture.IsNotNull() && !texture.isReadable)
+            {
+                OnSpatialPersistenceError($"Unable to add image [{texture?.name}] to library as the texture is not readable\nSet Read/Write on the source image.");
+                yield return null;
+            }
+
+            dynamicLibraryManager.ProcessImage(mutableLibrary, anchorGuid, texture, url);
         }
 
         private void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs trackedImage)
@@ -181,7 +198,16 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 else
                 {
                     trackedImageIds.Add(newImage.referenceImage.guid);
-                    OnAnchorLocated(newImage.referenceImage.guid, newImage.transform.gameObject);
+                    var trackedReference = profile.TrackedImagesLibrary.GetTrackedImageByName(newImage.referenceImage.name);
+                    if (trackedReference != null)
+                    {
+                        trackedImageReferences.Add(newImage.referenceImage.guid, trackedReference.SourceGuid);
+                        OnAnchorLocated(trackedImageReferences[newImage.referenceImage.guid], newImage.transform.gameObject);
+                    }
+                    else
+                    {
+                        OnAnchorLocated(newImage.referenceImage.guid, newImage.transform.gameObject);
+                    }
                 }
             }
 
@@ -189,20 +215,30 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             {
                 if (trackedImageIds.Contains(updatedImage.referenceImage.guid))
                 {
-                    OnAnchorUpdated(updatedImage.referenceImage.guid, updatedImage.transform.gameObject);
+                    Guid refGuid = updatedImage.referenceImage.guid;
+                    if(trackedImageReferences.TryGetValue(updatedImage.referenceImage.guid, out var trackedGuid))
+                    {
+                        refGuid = trackedGuid;
+                    }
+                    OnAnchorUpdated(refGuid, updatedImage.transform.gameObject);
                 }
                 else
                 {
                     OnAnchorLocatedError(updatedImage.referenceImage.guid, $"Tracked Image returned but no corresponding Guid Target found, available Images [{TrackedImageManager.referenceLibrary.count}]");
                 }
-
             }
 
             foreach (var removedImage in trackedImage.removed)
             {
                 if (trackedImageIds.Contains(removedImage.referenceImage.guid))
                 {
-                    OnAnchorDeleted(removedImage.referenceImage.guid);
+                    Guid refGuid = removedImage.referenceImage.guid;
+                    if (trackedImageReferences.TryGetValue(removedImage.referenceImage.guid, out var trackedGuid))
+                    {
+                        refGuid = trackedGuid;
+                    }
+                    OnAnchorDeleted(refGuid);
+                    trackedImageIds.Remove(removedImage.referenceImage.guid);
                 }
                 else
                 {
@@ -213,7 +249,17 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
         private void OnImageLoaded(ARFoundationTrackedImageData data)
         {
-            OnSpatialPersistenceStatusMessage($"Image Loaded: {data.Name}");
+            if(profile.TrackedImagesLibrary.GetTrackedImageByName(data.Name) == null)
+            {
+                profile.TrackedImagesLibrary.AddTrackedImageData(data);
+            }
+            OnCreateAnchorSucceeded(data.SourceGuid, null);
+            OnSpatialPersistenceStatusMessage($"Image Loaded: {data.Name}, Image Count: {trackedImageManager.referenceLibrary.count}");
+        }
+
+        private void OnImageLoadFailed(string message)
+        {
+            OnSpatialPersistenceError(message);
         }
         #endregion Private Methods
     }
