@@ -8,7 +8,7 @@
     "XR",
     "Mixed Reality"
   ],
-  "version": "1.0.0-pre.2",
+  "version": "1.0.0-pre.3",
   "unity": "2020.3",
   "homepage": "https://github.com/realitycollective",
   "bugs": {
@@ -25,7 +25,8 @@
     "url": "https://github.com/realitycollective"
   },
   "dependencies": {
-    "com.unity.xr.arfoundation": "4.1.13"
+    "com.unity.xr.arfoundation": "4.1.13",
+    "com.realitytoolkit.spatial-persistence": "1.0.0-pre.5"
   },
   "assets": [
     {
