@@ -1,10 +1,9 @@
 // Copyright (c) Reality Collective. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using RealityCollective.Extensions;
+using RealityCollective.Utilities.Extensions;
 using RealityCollective.Utilities.Async;
 using RealityToolkit.SpatialPersistence.ARFoundation.Definitions;
-using RealityToolkit.SpatialPersistence.ARFoundation.Extensions;
 using RealityToolkit.SpatialPersistence.Definitions;
 using RealityToolkit.SpatialPersistence.Interfaces;
 using System;
@@ -37,7 +36,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 if (trackedImageManager == null)
                 {
                     // Get a reference to the SpatialAnchorManager component (must be on the same gameobject)
+#if UNITY_2023_1_OR_NEWER
+                    trackedImageManager = GameObject.FindFirstObjectByType<ARTrackedImageManager>();
+#else                    
                     trackedImageManager = GameObject.FindObjectOfType<ARTrackedImageManager>();
+#endif
                     if (trackedImageManager.IsNull())
                     {
                         var message = $"Unable to locate the {typeof(ARTrackedImageManager)} in the scene, service cannot initialize";
@@ -55,7 +58,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 if (dynamicLibraryManager == null)
                 {
                     // Get a reference to the SpatialAnchorManager component (must be on the same gameobject)
+#if UNITY_2023_1_OR_NEWER
+                    dynamicLibraryManager = GameObject.FindFirstObjectByType<ARFoundationDynamicLibraryManager>();
+#else                    
                     dynamicLibraryManager = GameObject.FindObjectOfType<ARFoundationDynamicLibraryManager>();
+#endif
                     if (dynamicLibraryManager.IsNull())
                     {
                         if (TrackedImageManager.IsNull())
