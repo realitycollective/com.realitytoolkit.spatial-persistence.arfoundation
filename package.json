@@ -9,7 +9,7 @@
     "Mixed Reality"
   ],
   "version": "1.0.0-pre.4",
-  "unity": "2021.3",
+  "unity": "2022.3",
   "homepage": "https://github.com/realitycollective",
   "bugs": {
     "url": "https://github.com/realitycollective/realitytoolkit.dev/issues"
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "com.unity.xr.arfoundation": "5.1.0",
-    "com.realitytoolkit.spatial-persistence": "1.0.0-pre.5"
+    "com.realitytoolkit.spatial-persistence": "1.0.1"
   },
   "assets": [
     {
