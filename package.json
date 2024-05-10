@@ -1,28 +1,34 @@
 {
-  "name": "com.realitytoolkit.spatialpersistence.arfoundation",
+  "name": "com.realitytoolkit.spatial-persistence.arfoundation",
   "displayName": "RealityToolkit.SpatialPersistence.ARFoundation",
-  "description": "The Spatial Persistence ARFoundation module for the Reality Toolkit by the Reality Collective",
+  "description": "The Spatial Persistence ARFoundation module for the Reality Toolkit by the Reality Collective.",
+  "version": "1.0.0-pre.5",
+  "documentationUrl": "https://realitytoolkit.io",
+  "changelogUrl": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/releases",
+  "licensesUrl": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/blob/main/LICENSE.md",
   "keywords": [
     "VR",
     "AR",
     "XR",
     "Mixed Reality"
   ],
-  "version": "1.0.0-pre.5",
   "unity": "2022.3",
-  "homepage": "https://github.com/realitycollective",
+  "homepage": "https://realitytoolkit.io",
   "bugs": {
-    "url": "https://github.com/realitycollective/realitytoolkit.dev/issues"
+    "url": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/realitycollective/com.realitytoolkit.spatialpersistence.arfoundation"
+    "url": "git+https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation"
   },
   "author": {
     "name": "Reality Collective",
     "email": "realitycollectivedev@gmail.com",
     "url": "https://github.com/realitycollective"
+  },
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
   },
   "dependencies": {
     "com.unity.xr.arfoundation": "5.1.0",
