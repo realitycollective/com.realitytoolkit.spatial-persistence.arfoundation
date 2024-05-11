@@ -1,34 +1,35 @@
-// Copyright (c) Reality Collective. All rights reserved.
+﻿// Copyright (c) Reality Collective. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using RealityCollective.ServiceFramework.Editor;
 using RealityCollective.ServiceFramework.Editor.Packages;
 using RealityCollective.Utilities.Editor;
 using RealityCollective.Utilities.Extensions;
+using RealityToolkit.Editor;
+using RealityToolkit.Editor.Settings;
 using System.IO;
 using UnityEditor;
-using UnityEngine;
 
 namespace RealityToolkit.SpatialPersistence.ARFoundation.Editor
 {
     [InitializeOnLoad]
     internal static class SpatialPersistence_ARFoundationPackageInstaller
     {
-        private static readonly string destinationPath = Application.dataPath + "/RealityToolkit.Generated/SpatialPersistence_ARFoundation";
-        private static readonly string sourcePath = Path.GetFullPath($"{PathFinderUtility.ResolvePath<IPathFinder>(typeof(SpatialPersistence_ARFoundationPackagePathFinder)).ForwardSlashes()}{Path.DirectorySeparatorChar}{"Assets~"}");
+        private static readonly string destinationPath = Path.Combine(RealityToolkitEditorSettings.Instance.AssetImportPath, "SpatialPersistence_ARFoundation");
+        private static readonly string sourcePath = Path.GetFullPath($"{PathFinderUtility.ResolvePath<IPathFinder>(typeof(SpatialPersistence_ARFoundationPackagePathFinder)).ForwardSlashes()}{Path.DirectorySeparatorChar}{RealityToolkitPreferences.HIDDEN_PACKAGE_ASSETS_PATH}");
 
         static SpatialPersistence_ARFoundationPackageInstaller()
         {
             EditorApplication.delayCall += CheckPackage;
         }
 
-        [MenuItem(ServiceFrameworkPreferences.Editor_Menu_Keyword + "/Reality Toolkit/Packages/Install SpatialPersistence_ARFoundation Package Assets...", true)]
+        [MenuItem(RealityToolkitPreferences.Editor_Menu_Keyword + "/Packages / Install SpatialPersistence_ARFoundation Package Assets...", true)]
         private static bool ImportPackageAssetsValidation()
         {
             return !Directory.Exists($"{destinationPath}{Path.DirectorySeparatorChar}");
         }
 
-        [MenuItem(ServiceFrameworkPreferences.Editor_Menu_Keyword + "/Reality Toolkit/Packages/Install SpatialPersistence_ARFoundation Package Assets...")]
+        [MenuItem(RealityToolkitPreferences.Editor_Menu_Keyword + "/Packages / Install SpatialPersistence_ARFoundation Package Assets...")]
         private static void ImportPackageAssets()
         {
             EditorPreferences.Set($"{nameof(SpatialPersistence_ARFoundationPackageInstaller)}.Assets", false);
