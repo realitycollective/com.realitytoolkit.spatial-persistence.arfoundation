@@ -29,6 +29,8 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         private bool isStarted = false;
         private bool isStarting = false;
 
+        private bool hasValidTrackingProfile => profile.IsNotNull() && profile.TrackedImagesLibrary.IsNotNull();
+
         private ARTrackedImageManager TrackedImageManager
         {
             get
@@ -107,7 +109,12 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 runtimeImageLibrary = TrackedImageManager.referenceLibrary as MutableRuntimeReferenceImageLibrary;
                 DynamicLibraryManager.OnImageLoaded += OnImageLoaded;
                 DynamicLibraryManager.OnImageLoadFailed += OnImageLoadFailed;
+
+#if ARFOUNDATION_6
+                TrackedImageManager.trackablesChanged.AddListener(OnTrackedImagesChanged);
+#else
                 TrackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
+#endif
                 if (profile.TrackedImagesLibrary.IsNotNull() && profile.TrackedImagesLibrary.TrackedImages != null)
                 {
                     DynamicLibraryManager.ProcessImages(runtimeImageLibrary, profile.TrackedImagesLibrary.TrackedImages);
@@ -125,7 +132,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         {
             if (TrackedImageManager != null)
             {
+#if ARFOUNDATION_6
+                TrackedImageManager.trackablesChanged.RemoveListener(OnTrackedImagesChanged);
+#else
                 TrackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
+#endif
             }
             OnSessionEnded();
         }
@@ -172,7 +183,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         {
             if (mutableLibrary is null)
             {
-                OnSpatialPersistenceError($"Library is inaccessble.");
+                OnSpatialPersistenceError($"Library is inaccessible.");
                 yield return null;
             }
             if (trackedImageIds.Contains(anchorGuid))
@@ -194,7 +205,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             dynamicLibraryManager.ProcessImage(mutableLibrary, anchorGuid, texture, url);
         }
 
+#if ARFOUNDATION_6
+        private void OnTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> trackedImage)
+#else
         private void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs trackedImage)
+#endif
         {
             foreach (var newImage in trackedImage.added)
             {
@@ -223,7 +238,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 if (trackedImageIds.Contains(updatedImage.referenceImage.guid))
                 {
                     Guid refGuid = updatedImage.referenceImage.guid;
-                    if(trackedImageReferences.TryGetValue(updatedImage.referenceImage.guid, out var trackedGuid))
+                    if (trackedImageReferences.TryGetValue(updatedImage.referenceImage.guid, out var trackedGuid))
                     {
                         refGuid = trackedGuid;
                     }
@@ -235,7 +250,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 }
             }
 
+#if ARFOUNDATION_6
+            foreach (var (id, removedImage) in trackedImage.removed)
+#else
             foreach (var removedImage in trackedImage.removed)
+#endif
             {
                 if (trackedImageIds.Contains(removedImage.referenceImage.guid))
                 {
@@ -256,7 +275,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
         private void OnImageLoaded(ARFoundationTrackedImageData data)
         {
-            if(profile.TrackedImagesLibrary.GetTrackedImageByName(data.Name) == null)
+            if (hasValidTrackingProfile && profile.TrackedImagesLibrary.GetTrackedImageByName(data.Name) == null)
             {
                 profile.TrackedImagesLibrary.AddTrackedImageData(data);
             }
