@@ -33,7 +33,7 @@ The ARFoundation (SpatialPersistence.ARFoundation) service module package for th
 ## Getting Started
 <!-- Update getting started docs here here -->
 
-For more details, check the ["Getting Started"](https://www.realitytoolkit.io/) documentation for the Reality Toolkit.
+For more details, check the ["Getting Started"](https://realitytoolkit.realitycollective.net/) documentation for the Reality Toolkit.
 
 ### OpenUPM
 <!-- Check openUPM links and details -->

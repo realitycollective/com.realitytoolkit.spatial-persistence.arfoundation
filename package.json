@@ -3,7 +3,7 @@
   "displayName": "RealityToolkit.SpatialPersistence.ARFoundation",
   "description": "The Spatial Persistence ARFoundation module for the Reality Toolkit by the Reality Collective.",
   "version": "1.0.0-pre.8",
-  "documentationUrl": "https://realitytoolkit.io",
+  "documentationUrl": "https://realitytoolkit.realitycollective.net/",
   "changelogUrl": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/releases",
   "licensesUrl": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/blob/main/LICENSE.md",
   "keywords": [
@@ -13,7 +13,7 @@
     "Mixed Reality"
   ],
   "unity": "2022.3",
-  "homepage": "https://realitytoolkit.io",
+  "homepage": "https://realitytoolkit.realitycollective.net/",
   "bugs": {
     "url": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/issues"
   },
@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "com.unity.xr.arfoundation": "5.1.0",
-    "com.realitytoolkit.spatial-persistence": "1.0.1"
+    "com.realitytoolkit.spatial-persistence": "1.0.2"
   },
   "assets": [
     {
