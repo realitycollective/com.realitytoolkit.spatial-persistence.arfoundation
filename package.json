@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "com.unity.xr.arfoundation": "5.1.0",
-    "com.realitytoolkit.spatial-persistence": "1.0.1"
+    "com.realitytoolkit.spatial-persistence": "1.0.2"
   },
   "assets": [
     {
