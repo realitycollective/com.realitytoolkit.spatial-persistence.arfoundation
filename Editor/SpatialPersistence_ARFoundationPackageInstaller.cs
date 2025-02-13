@@ -7,6 +7,7 @@ using RealityCollective.Utilities.Editor;
 using RealityCollective.Utilities.Extensions;
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 
 namespace RealityToolkit.SpatialPersistence.ARFoundation.Editor
 {
