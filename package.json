@@ -2,7 +2,7 @@
   "name": "com.realitytoolkit.spatial-persistence.arfoundation",
   "displayName": "RealityToolkit.SpatialPersistence.ARFoundation",
   "description": "The Spatial Persistence ARFoundation module for the Reality Toolkit by the Reality Collective.",
-  "version": "1.0.0-pre.14",
+  "version": "1.0.0-pre.15",
   "documentationUrl": "https://realitytoolkit.realitycollective.net/",
   "changelogUrl": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/releases",
   "licensesUrl": "https://github.com/realitycollective/com.realitytoolkit.spatial-persistence.arfoundation/blob/main/LICENSE.md",
