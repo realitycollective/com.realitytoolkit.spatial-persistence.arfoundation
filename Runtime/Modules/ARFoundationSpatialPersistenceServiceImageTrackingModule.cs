@@ -97,6 +97,13 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         /// <inheritdoc />
         public override Task StartSpatialPersistenceModule()
         {
+            if(TrackedImageManager is null)
+            {
+                var message = $"Unable to start the ARFoundation Spatial Persistence module as the {nameof(ARTrackedImageManager)} is not defined in the scene";
+                OnSpatialPersistenceError(message);
+                return Task.FromException(new ArgumentNullException(nameof(ARTrackedImageManager), message));
+            }
+
             if (TrackedImageManager.referenceLibrary is null)
             {
                 var message = $"Unable to start the ARFoundation Spatial Persistence module as the {nameof(ARTrackedImageManager)} has no Reference Image Library defined\nA default Image library is required for the Component to start in Unity";

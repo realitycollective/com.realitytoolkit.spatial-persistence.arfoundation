@@ -13,24 +13,22 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation.Editor
     [InitializeOnLoad]
     internal static class SpatialPersistence_ARFoundationPackageInstaller
     {
-        public const string HIDDEN_PACKAGE_ASSETS_PATH = "Assets~"; 
-        public const string Editor_Menu_Keyword = "Tools/Reality Toolkit";
-        private const string assetImportPath = "Assets/RealityToolkit.Generated/";
-        private static readonly string destinationPath = Path.Combine(assetImportPath, "SpatialPersistence_ARFoundation");
-        private static readonly string sourcePath = Path.GetFullPath($"{PathFinderUtility.ResolvePath<IPathFinder>(typeof(SpatialPersistence_ARFoundationPackagePathFinder)).ForwardSlashes()}{Path.DirectorySeparatorChar}{HIDDEN_PACKAGE_ASSETS_PATH}");
+
+        private static readonly string destinationPath = Path.Combine(RealityToolkitEditorSettings.Instance.AssetImportPath, "SpatialPersistence_ARFoundation");
+        private static readonly string sourcePath = Path.GetFullPath($"{PathFinderUtility.ResolvePath<IPathFinder>(typeof(PlayerPackagePathFinder)).ForwardSlashes()}{Path.DirectorySeparatorChar}{"Assets~"}");
 
         static SpatialPersistence_ARFoundationPackageInstaller()
         {
             EditorApplication.delayCall += CheckPackage;
         }
 
-        [MenuItem(Editor_Menu_Keyword + "/Packages / Install SpatialPersistence_ARFoundation Package Assets...", true)]
+        [MenuItem(RealityToolkitPreferences.Editor_Menu_Keyword + "/Packages/Install SpatialPersistence_ARFoundation Package Assets...", true)]
         private static bool ImportPackageAssetsValidation()
         {
             return !Directory.Exists($"{destinationPath}{Path.DirectorySeparatorChar}");
         }
 
-        [MenuItem(Editor_Menu_Keyword + "/Packages / Install SpatialPersistence_ARFoundation Package Assets...")]
+        [MenuItem(RealityToolkitPreferences.Editor_Menu_Keyword + "/Packages/Install SpatialPersistence_ARFoundation Package Assets...")]
         private static void ImportPackageAssets()
         {
             EditorPreferences.Set($"{nameof(SpatialPersistence_ARFoundationPackageInstaller)}.Assets", false);
