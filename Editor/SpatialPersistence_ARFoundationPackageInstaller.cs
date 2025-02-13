@@ -14,8 +14,8 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation.Editor
     internal static class SpatialPersistence_ARFoundationPackageInstaller
     {
 
-        private static readonly string destinationPath = Path.Combine(RealityToolkitEditorSettings.Instance.AssetImportPath, "SpatialPersistence_ARFoundation");
-        private static readonly string sourcePath = Path.GetFullPath($"{PathFinderUtility.ResolvePath<IPathFinder>(typeof(PlayerPackagePathFinder)).ForwardSlashes()}{Path.DirectorySeparatorChar}{"Assets~"}");
+        private static readonly string destinationPath = Path.Combine(Application.dataPath, "SpatialPersistence_ARFoundation");
+        private static readonly string sourcePath = Path.GetFullPath($"{PathFinderUtility.ResolvePath<IPathFinder>(typeof(SpatialPersistence_ARFoundationPackagePathFinder)).ForwardSlashes()}{Path.DirectorySeparatorChar}{"Assets~"}");
 
         static SpatialPersistence_ARFoundationPackageInstaller()
         {
