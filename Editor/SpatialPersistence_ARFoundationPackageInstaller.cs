@@ -23,13 +23,13 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation.Editor
             EditorApplication.delayCall += CheckPackage;
         }
 
-        [MenuItem(ServiceFrameworkPreferences.Service_Framework_Editor_Menu_Keyword + "/Reality Toolkit/Packages/Install SpatialPersistence_ARFoundation Package Assets...", true)]
+        [MenuItem("Tools/Reality Toolkit/Packages/Install SpatialPersistence_ARFoundation Package Assets...", true)]
         private static bool ImportPackageAssetsValidation()
         {
             return !Directory.Exists($"{destinationPath}{Path.DirectorySeparatorChar}");
         }
 
-        [MenuItem(ServiceFrameworkPreferences.Service_Framework_Editor_Menu_Keyword + "/Reality Toolkit/Packages/Install SpatialPersistence_ARFoundation Package Assets...")]
+        [MenuItem("Tools/Reality Toolkit/Packages/Install SpatialPersistence_ARFoundation Package Assets...")]
         private static void ImportPackageAssets()
         {
             EditorPreferences.Set($"{nameof(SpatialPersistence_ARFoundationPackageInstaller)}.Assets", false);
