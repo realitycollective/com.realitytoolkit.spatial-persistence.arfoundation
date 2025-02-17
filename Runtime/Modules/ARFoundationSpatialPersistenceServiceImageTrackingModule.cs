@@ -230,7 +230,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                     var trackedReference = profile.TrackedImagesLibrary.GetTrackedImageByName(newImage.referenceImage.name);
                     if (trackedReference != null)
                     {
-                        trackedImageReferences.Add(newImage.referenceImage.guid, trackedReference.SourceGuid);
+                        trackedImageReferences.TryAdd(newImage.referenceImage.guid, trackedReference.SourceGuid);
                         OnAnchorLocated(trackedImageReferences[newImage.referenceImage.guid], newImage.transform.gameObject);
                     }
                     else
