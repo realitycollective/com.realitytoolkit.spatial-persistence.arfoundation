@@ -24,7 +24,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         private ARTrackedImageManager trackedImageManager;
         private ARFoundationDynamicLibraryManager dynamicLibraryManager;
         private MutableRuntimeReferenceImageLibrary runtimeImageLibrary;
-        private readonly List<Guid> trackedImageIds = new List<Guid>();
+        private readonly List<Guid> trackedImageIds = new();
         private readonly Dictionary<Guid, Guid> trackedImageReferences = new Dictionary<Guid, Guid>();
         private bool isStarted = false;
         private bool isStarting = false;
@@ -97,7 +97,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         /// <inheritdoc />
         public override Task StartSpatialPersistenceModule()
         {
-            if(TrackedImageManager is null)
+            if (TrackedImageManager is null)
             {
                 var message = $"Unable to start the ARFoundation Spatial Persistence module as the {nameof(ARTrackedImageManager)} is not defined in the scene";
                 OnSpatialPersistenceError(message);
@@ -149,11 +149,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         }
 
         /// <inheritdoc />
-        public override void TryFindAnchors(params SpatialPersistenceAnchorArgs[] args)
+        public override void TryFindAnchors(params SpatialPersistenceSearchArgs[] searchCriteria)
         {
-            if (args == null)
+            if (searchCriteria == null)
             {
-                OnSpatialPersistenceError("Cannot add anchor as none were provided");
+                OnSpatialPersistenceError("Cannot add anchors as no search criteria was provided");
                 return;
             }
             if (!IsRunning)
@@ -166,15 +166,25 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 return;
             }
 
-            foreach (var anchorArg in args)
+            foreach (var searchArg in searchCriteria)
             {
+                if (searchArg.spatialPersistenceTrackingType != TrackingType || searchArg.spatialPersistenceTrackingType != SpatialPersistenceTrackingType.Any)
+                {
+                    // Skip if the search criteria is not valid for this type of module
+                    return;
+                }
+                if (!searchArg.IsValid)
+                {
+                    OnSpatialPersistenceError("Cannot add anchor as no id/Texture was provided");
+                    continue;
+                }
                 OnFindAnchorStarted();
-                AwaiterExtensions.RunCoroutine(AddToLibrary(runtimeImageLibrary, anchorArg.guid, anchorArg.texture, anchorArg.url));
+                AwaiterExtensions.RunCoroutine(AddToLibrary(runtimeImageLibrary, searchArg.anchorID, searchArg.texture, searchArg.url));
             }
         }
 
         /// <inheritdoc />
-        public override void ResetAnchors(params Guid[] ids)
+        public override void ResetAnchors(params string[] ids)
         {
             //Skip for now
         }
@@ -186,8 +196,15 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         #endregion IARFoundationImageTrackingModule implementation
 
         #region Private Methods
-        private IEnumerator AddToLibrary(MutableRuntimeReferenceImageLibrary mutableLibrary, Guid anchorGuid, Texture2D texture = null, string url = "")
+        private IEnumerator AddToLibrary(MutableRuntimeReferenceImageLibrary mutableLibrary, string anchorID, Texture2D texture = null, string url = "")
         {
+            var anchorGuid = new Guid(anchorID);
+            if (string.IsNullOrEmpty(anchorID) || anchorGuid == Guid.Empty)
+            {
+                OnSpatialPersistenceError($"Invalid Anchor ID provided [{anchorID}]");
+                yield return null;
+            }
+
             if (mutableLibrary is null)
             {
                 OnSpatialPersistenceError($"Library is inaccessible.");
@@ -195,7 +212,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             }
             if (trackedImageIds.Contains(anchorGuid))
             {
-                OnAnchorLocatedError(anchorGuid, $"Anchor with Guid [{anchorGuid}] already exists.");
+                OnAnchorLocatedError(anchorID, $"Anchor with Guid [{anchorID}] already exists.");
                 yield return null;
             }
             if (texture.IsNull() && string.IsNullOrEmpty(url))
@@ -222,7 +239,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             {
                 if (trackedImageIds.Contains(newImage.referenceImage.guid))
                 {
-                    OnAnchorLocatedError(newImage.referenceImage.guid, $"Tracked Image returned but no corresponding Guid Target found, available Images [{TrackedImageManager.referenceLibrary.count}]");
+                    OnAnchorLocatedError(newImage.referenceImage.guid.ToString(), $"Tracked Image returned but no corresponding Guid Target found, available Images [{TrackedImageManager.referenceLibrary.count}]");
                 }
                 else
                 {
@@ -231,11 +248,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                     if (trackedReference != null)
                     {
                         trackedImageReferences.TryAdd(newImage.referenceImage.guid, trackedReference.SourceGuid);
-                        OnAnchorLocated(trackedImageReferences[newImage.referenceImage.guid], newImage.transform.gameObject);
+                        OnAnchorLocated(trackedImageReferences[newImage.referenceImage.guid].ToString(), newImage.transform.gameObject);
                     }
                     else
                     {
-                        OnAnchorLocated(newImage.referenceImage.guid, newImage.transform.gameObject);
+                        OnAnchorLocated(newImage.referenceImage.guid.ToString(), newImage.transform.gameObject);
                     }
                 }
             }
@@ -249,11 +266,11 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                     {
                         refGuid = trackedGuid;
                     }
-                    OnAnchorUpdated(refGuid, updatedImage.transform.gameObject);
+                    OnAnchorUpdated(refGuid.ToString(), updatedImage.transform.gameObject);
                 }
                 else
                 {
-                    OnAnchorLocatedError(updatedImage.referenceImage.guid, $"Tracked Image returned but no corresponding Guid Target found, available Images [{TrackedImageManager.referenceLibrary.count}]");
+                    OnAnchorLocatedError(updatedImage.referenceImage.guid.ToString(), $"Tracked Image returned but no corresponding Guid Target found, available Images [{TrackedImageManager.referenceLibrary.count}]");
                 }
             }
 
@@ -270,12 +287,12 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                     {
                         refGuid = trackedGuid;
                     }
-                    OnAnchorDeleted(refGuid);
+                    OnAnchorDeleted(refGuid.ToString());
                     trackedImageIds.Remove(removedImage.referenceImage.guid);
                 }
                 else
                 {
-                    OnAnchorLocatedError(removedImage.referenceImage.guid, $"Tracked Image returned but no corresponding Guid Target found, available Images [{TrackedImageManager.referenceLibrary.count}]");
+                    OnAnchorLocatedError(removedImage.referenceImage.guid.ToString(), $"Tracked Image returned but no corresponding Guid Target found, available Images [{TrackedImageManager.referenceLibrary.count}]");
                 }
             }
         }
@@ -286,7 +303,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
             {
                 profile.TrackedImagesLibrary.AddTrackedImageData(data);
             }
-            OnCreateAnchorSucceeded(data.SourceGuid, null);
+            OnCreateAnchorSucceeded(data.SourceGuid.ToString(), null);
             OnSpatialPersistenceStatusMessage($"Image Loaded: {data.Name}, Image Count: {trackedImageManager.referenceLibrary.count}");
         }
 
