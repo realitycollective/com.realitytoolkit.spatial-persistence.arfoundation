@@ -29,7 +29,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
         private bool isStarted = false;
         private bool isStarting = false;
 
-        private bool hasValidTrackingProfile => profile.IsNotNull() && profile.TrackedImagesLibrary.IsNotNull();
+        private bool HasValidTrackingProfile => profile.IsNotNull() && TrackedImagesLibrary.IsNotNull();
 
         private ARTrackedImageManager TrackedImageManager
         {
@@ -122,9 +122,9 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 #else
                 TrackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
 #endif
-                if (profile.TrackedImagesLibrary.IsNotNull() && profile.TrackedImagesLibrary.TrackedImages != null)
+                if (HasValidTrackingProfile && TrackedImagesLibrary.TrackedImages != null)
                 {
-                    DynamicLibraryManager.ProcessImages(runtimeImageLibrary, profile.TrackedImagesLibrary.TrackedImages);
+                    DynamicLibraryManager.ProcessImages(runtimeImageLibrary, TrackedImagesLibrary.TrackedImages);
                 }
                 isStarted = true;
                 isStarting = false;
@@ -168,9 +168,10 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
             foreach (var searchArg in searchCriteria)
             {
-                if (searchArg.spatialPersistenceTrackingType != TrackingType || searchArg.spatialPersistenceTrackingType != SpatialPersistenceTrackingType.Any)
+                if (searchArg.spatialPersistenceTrackingType != TrackingType || searchArg.spatialPersistenceTrackingType == SpatialPersistenceTrackingType.Any)
                 {
                     // Skip if the search criteria is not valid for this type of module
+                    OnSpatialPersistenceStatusMessage($"Cannot add anchor as is not an Image Tracking type - [{searchArg.spatialPersistenceTrackingType}]");
                     return;
                 }
                 if (!searchArg.IsValid)
@@ -244,7 +245,7 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
                 else
                 {
                     trackedImageIds.Add(newImage.referenceImage.guid);
-                    var trackedReference = profile.TrackedImagesLibrary.GetTrackedImageByName(newImage.referenceImage.name);
+                    var trackedReference = TrackedImagesLibrary.GetTrackedImageByName(newImage.referenceImage.name);
                     if (trackedReference != null)
                     {
                         trackedImageReferences.TryAdd(newImage.referenceImage.guid, trackedReference.SourceGuid);
@@ -299,9 +300,9 @@ namespace RealityToolkit.SpatialPersistence.ARFoundation
 
         private void OnImageLoaded(ARFoundationTrackedImageData data)
         {
-            if (hasValidTrackingProfile && profile.TrackedImagesLibrary.GetTrackedImageByName(data.Name) == null)
+            if (HasValidTrackingProfile && TrackedImagesLibrary.GetTrackedImageByName(data.Name) == null)
             {
-                profile.TrackedImagesLibrary.AddTrackedImageData(data);
+                TrackedImagesLibrary.AddTrackedImageData(data);
             }
             OnCreateAnchorSucceeded(data.SourceGuid.ToString(), null);
             OnSpatialPersistenceStatusMessage($"Image Loaded: {data.Name}, Image Count: {trackedImageManager.referenceLibrary.count}");
